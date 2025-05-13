@@ -3,6 +3,7 @@ CREATE TABLE `Archers` (
   `name` VARCHAR(250) NOT NULL,
   `age` INT NOT NULL,
   `gender` VARCHAR(250) NOT NULL,
+  `categories` VARCHAR(50) NOT NULL,
   `created_at` TIMESTAMP NULL,
   CONSTRAINT `PRIMARY` PRIMARY KEY (`archer_ID`)
 );
