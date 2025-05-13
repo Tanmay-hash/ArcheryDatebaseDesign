@@ -1,3 +1,5 @@
+USE archary;
+
 CREATE TABLE `Archers` ( 
   `archer_ID` INT AUTO_INCREMENT NOT NULL,
   `name` VARCHAR(250) NOT NULL,
@@ -99,12 +101,11 @@ CREATE TABLE `Scores` (
   CONSTRAINT `scores_range_instance_id_FK` FOREIGN KEY (`range_instance_ID`) REFERENCES `RangeInstance` (`range_instance_ID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-
 -- seed:
-INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Jane Doe','40','female');
-INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Jessica Bina','19','female');
-INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Samuel Curt','50','male');
-INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('George Papa','17','male');
+INSERT INTO `Archers` (`name`, `age`, `gender`, `category`) VALUES ('Jane Doe', 40, 'female', 'Open Female');
+INSERT INTO `Archers` (`name`, `age`, `gender`, `category`) VALUES ('Jessica Bina', 19, 'female', 'Under 21 Female');
+INSERT INTO `Archers` (`name`, `age`, `gender`, `category`) VALUES ('Samuel Curt', 50, 'male', '50+ Male');
+INSERT INTO `Archers` (`name`, `age`, `gender`, `category`) VALUES ('George Papa', 17, 'male', 'Under 18 Male');
 
 INSERT INTO Devisions (style) VALUES ('Recurve');
 INSERT INTO Devisions (style) VALUES ('Compound');
