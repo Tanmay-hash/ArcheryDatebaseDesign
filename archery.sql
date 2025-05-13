@@ -4,7 +4,7 @@ CREATE TABLE `Archers` (
   `age` INT NOT NULL,
   `gender` VARCHAR(250) NOT NULL,
   `categories` VARCHAR(50) NOT NULL,
-  `created_at` TIMESTAMP NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT `PRIMARY` PRIMARY KEY (`archer_ID`)
 );
 
@@ -98,3 +98,33 @@ CREATE TABLE `Scores` (
   CONSTRAINT `scores_end_id_FK` FOREIGN KEY (`end_ID`) REFERENCES `Ends` (`end_ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `scores_range_instance_id_FK` FOREIGN KEY (`range_instance_ID`) REFERENCES `RangeInstance` (`range_instance_ID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
+
+
+-- seed:
+INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Jane Doe','40','female');
+INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Jessica Bina','19','female');
+INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('Samuel Curt','50','male');
+INSERT INTO `Archers` (`name`, `age`, `gender`) VALUES ('George Papa','17','male');
+
+INSERT INTO Devisions (style) VALUES ('Recurve');
+INSERT INTO Devisions (style) VALUES ('Compound');
+INSERT INTO Devisions (style) VALUES ('Recurve Barebow');
+INSERT INTO Devisions (style) VALUES ('Compound Longbow');
+INSERT INTO Devisions (style) VALUES ('Longbow');
+
+INSERT INTO `ArcherDevision` (`archer_ID`, `devision_ID`) VALUES ('4','8');
+INSERT INTO `ArcherDevision` (`archer_ID`, `devision_ID`) VALUES ('5','9');
+INSERT INTO `ArcherDevision` (`archer_ID`, `devision_ID`) VALUES ('6','10');
+INSERT INTO `ArcherDevision` (`archer_ID`, `devision_ID`) VALUES ('7','8');
+
+INSERT INTO `Clubs` (`name`) VALUES ('Hoppers Crossings Archary');
+INSERT INTO `Clubs` (`name`) VALUES ('Sunshine Archary Club');
+INSERT INTO `Clubs` (`name`) VALUES ('Taylors Hill Club');
+
+-- for now, competitons soley belong to clubs
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('The Royal Bow Invitational', 1);
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('Sovereign Arrow Challenge', 1);
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('Precision Archery Open', 2);
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('Bullseye Cup', 3);
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('Sunset Valley Archery Meet', 3);
+INSERT INTO `Competition` (`name`, `club_ID`) VALUES ('Oceania Archery Trials', 3);
