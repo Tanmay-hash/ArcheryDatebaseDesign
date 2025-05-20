@@ -142,32 +142,142 @@ INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('WA70/1440');
 INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('WA60/1440');
 INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('AA50/1440');
 INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('AA40/1440');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Long Sydney');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Sydney');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Long Brisbane');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Brisbane');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Adelaide');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Short Adelaide');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Hobart');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Perth');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Canberra WA60/900');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Short Canberra');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Junior Canberra');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Mini Canberra');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Grange');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Melbourne');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Darwin');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Geelong');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Newcastle');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Holt');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Samford');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Drake');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Wollongong');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Townsville');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('Launceston');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('WA70/720');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('WA60/720');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('WA50/720');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('50/720');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('40/720');
-INSERT INTO `RoundDefinitions` (`schedule_name`) VALUES ('30/720');
+
+-- WA90/1440
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('1','1','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('2','1','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('4','1','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','1','6','80');
+
+-- WA70/1440
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('2','2','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('3','2','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('4','2','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','2','6','122');
+
+-- WA60/1440
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('3','3','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('4','3','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('5','3','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','3','6','80');
+
+-- AA50/1440
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('4','4','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('5','4','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','4','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('7','4','6','80');
+
+-- AA40/1440
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('5','5','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','5','6','122');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('6','5','6','80');
+INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('7','5','6','80');
+
+
+-- =============================================
+-- PART 1: Initialize the first range with manually provided RDA ID
+-- =============================================
+-- Variables to configure the round
+SET @archer_id = 1; -- Jane Doe
+SET @archer_division_id = 1; -- Jane's Recurve division
+SET @competition_id = 1; -- The Royal Bow Invitational
+SET @round_definition_association_id = 1; -- WA90/1440, 90m, 122cm, 6 ends
+
+START TRANSACTION;
+
+-- Initialize first end with zero score (before any arrows are shot)
+INSERT INTO Ends (end_total_score, created_at) 
+VALUES (0, CURRENT_TIMESTAMP);
+
+SET @current_end_id = LAST_INSERT_ID();
+
+-- Initialize first range instance with the manually specified RDA ID
+INSERT INTO RangeInstance (end_ID, round_definition_association_ID, created_at)
+VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
+
+SET @current_range_instance_id = LAST_INSERT_ID();
+
+COMMIT;
+
+-- =============================================
+-- PART 2: Record scores for the current end
+-- =============================================
+-- Jane shoots her first end (6 arrows) at 90m
+START TRANSACTION;
+
+-- Arrow 1: Score 9
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
+
+-- Arrow 2: Score 10
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 10, 1);
+
+-- Arrow 3: Score 9
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
+
+-- Arrow 4: Score 8
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 8, 1);
+
+-- Arrow 5: Score 10
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 10, 1);
+
+-- Arrow 6: Score 9
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
+
+-- Update end total score (55 points)
+UPDATE Ends 
+SET end_total_score = (
+    SELECT SUM(score_value) 
+    FROM Scores 
+    WHERE end_ID = @current_end_id
+)
+WHERE end_ID = @current_end_id;
+
+COMMIT;
+
+-- =============================================
+-- PART 3: Create new end within the same range
+-- =============================================
+START TRANSACTION;
+
+-- Create a new end for the next set of arrows (same range/distance)
+INSERT INTO Ends (end_total_score, created_at) 
+VALUES (0, CURRENT_TIMESTAMP);
+
+SET @current_end_id = LAST_INSERT_ID();
+
+-- Create a new range instance using the same round_definition_association_id
+INSERT INTO RangeInstance (end_ID, round_definition_association_ID, created_at)
+VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
+
+SET @current_range_instance_id = LAST_INSERT_ID();
+
+COMMIT;
+
+-- =============================================
+-- PART 4: Progress to a new range (manually specified)
+-- =============================================
+-- Jane moves to 70m
+SET @round_definition_association_id = 2; -- 70m distance for WA90/1440
+
+-- Prepare for Jane's first end at 70m
+START TRANSACTION;
+
+-- Create a new end record for the first 70m end
+INSERT INTO Ends (end_total_score, created_at) 
+VALUES (0, CURRENT_TIMESTAMP);
+
+SET @current_end_id = LAST_INSERT_ID();
+
+-- Create a new range instance for 70m
+INSERT INTO RangeInstance (end_ID, round_definition_association_ID, created_at)
+VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
+
+SET @current_range_instance_id = LAST_INSERT_ID();
+
+COMMIT;
