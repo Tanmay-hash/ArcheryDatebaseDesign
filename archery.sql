@@ -174,9 +174,7 @@ INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definiti
 INSERT INTO `RoundDefinitionAssociation` (`range_definition_ID`, `round_definition_ID`, `total_ends`, `face_size`) VALUES ('7','5','6','80');
 
 
--- =============================================
--- PART 1: Initialize the first range with manually provided RDA ID
--- =============================================
+-- PART 1: initialise the first range with manually provided RoundDefinitionAssociation ID
 -- Variables to configure the round
 SET @archer_id = 1; -- Jane Doe
 SET @archer_division_id = 1; -- Jane's Recurve division
@@ -185,23 +183,22 @@ SET @round_definition_association_id = 1; -- WA90/1440, 90m, 122cm, 6 ends
 
 START TRANSACTION;
 
--- Initialize first end with zero score (before any arrows are shot)
-INSERT INTO Ends (end_total_score, created_at) 
-VALUES (0, CURRENT_TIMESTAMP);
+-- initialise first end with zero score (before any arrows are shot)
+INSERT INTO Ends (end_total_score) 
+VALUES (0);
 
 SET @current_end_id = LAST_INSERT_ID();
 
--- Initialize first range instance with the manually specified RDA ID
-INSERT INTO RangeInstance (end_ID, round_definition_association_ID, created_at)
-VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
+-- Initialise first range instance with the manually specified RoundDefinitionAssociation ID
+INSERT INTO RangeInstance (end_ID, round_definition_association_ID)
+VALUES (@current_end_id, @round_definition_association_id);
 
 SET @current_range_instance_id = LAST_INSERT_ID();
 
 COMMIT;
 
--- =============================================
+-- ==============================================================================================
 -- PART 2: Record scores for the current end
--- =============================================
 -- Jane shoots her first end (6 arrows) at 90m
 START TRANSACTION;
 
@@ -240,28 +237,53 @@ WHERE end_ID = @current_end_id;
 
 COMMIT;
 
--- =============================================
--- PART 3: Create new end within the same range
--- =============================================
+-- ==============================================================================================
+-- PART 3: Create new end within the same range - 90m
 START TRANSACTION;
 
 -- Create a new end for the next set of arrows (same range/distance)
-INSERT INTO Ends (end_total_score, created_at) 
-VALUES (0, CURRENT_TIMESTAMP);
+INSERT INTO Ends (end_total_score) 
+VALUES (0);
 
 SET @current_end_id = LAST_INSERT_ID();
 
--- Create a new range instance using the same round_definition_association_id
-INSERT INTO RangeInstance (end_ID, round_definition_association_ID, created_at)
-VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
+-- Arrow 1: Score 7
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
 
-SET @current_range_instance_id = LAST_INSERT_ID();
+-- Arrow 2: Score 10
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 10, 1);
+
+-- Arrow 3: Score 8
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
+
+-- Arrow 4: Score 8
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 8, 1);
+
+-- Arrow 5: Score 9
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 10, 1);
+
+-- Arrow 6: Score 10
+INSERT INTO Scores (archer_ID, archer_devision_ID, competition_ID, range_instance_ID, end_ID, score_value, is_competition)
+VALUES (@archer_id, @archer_division_id, @competition_id, @current_range_instance_id, @current_end_id, 9, 1);
+
+-- Update end total score (55 points)
+UPDATE Ends 
+SET end_total_score = (
+    SELECT SUM(score_value) 
+    FROM Scores 
+    WHERE end_ID = @current_end_id
+)
+WHERE end_ID = @current_end_id;
 
 COMMIT;
 
--- =============================================
+-- ==============================================================================================
 -- PART 4: Progress to a new range (manually specified)
--- =============================================
 -- Jane moves to 70m
 SET @round_definition_association_id = 2; -- 70m distance for WA90/1440
 
@@ -281,3 +303,30 @@ VALUES (@current_end_id, @round_definition_association_id, CURRENT_TIMESTAMP);
 SET @current_range_instance_id = LAST_INSERT_ID();
 
 COMMIT;
+
+
+
+
+---------------------------------------------------------------------
+-- CREATING PROCEDURES FOR EACH OF THE ABOVE ROUND INSERTION QUERIES;
+---------------------------------------------------------------------
+DELIMITER //
+CREATE PROCEDURE initialise_round(IN round_definition_id)
+BEGIN 
+
+START TRANSACTION;
+
+-- initialise first end with zero score (before any arrows are shot)
+INSERT INTO Ends (end_total_score) 
+VALUES (0);
+
+SET @current_end_id = LAST_INSERT_ID();
+
+-- Initialise first range passed in manually via procedure args.
+INSERT INTO RangeInstance (end_ID, round_definition_association_ID)
+VALUES (@current_end_id, round_definition_id);
+
+COMMIT;
+
+END
+DELIMITER;
