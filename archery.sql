@@ -228,12 +228,11 @@ DELIMITER ;
 -- PROCEDURE: Record round scores within the same range:
 -- -------------------------------------------------------------------
 
-
 DELIMITER //
 
 CREATE PROCEDURE record_end_scores (
     IN archer_id INT,
-    IN archer_division_id INT,
+    IN archer_devision_id INT,
     IN competition_id INT,
     IN range_instance_id INT,
     IN is_competition TINYINT,
@@ -244,7 +243,6 @@ CREATE PROCEDURE record_end_scores (
 )
 BEGIN
   DECLARE end_id INT;
-  DECLARE existing_scores INT;
 
   START TRANSACTION;
 
@@ -254,16 +252,6 @@ BEGIN
         SET end_id = LAST_INSERT_ID();
     ELSE
         SET end_id = existing_end_id;
-
-        SELECT COUNT(*)
-        INTO existing_scores
-        FROM Scores
-        WHERE end_ID = end_id;
-
-        IF existing_scores + 6 > 6 THEN
-          SIGNAL SQLSTATE '45000'
-          SET MESSAGE_TEXT = 'Cannot insert more than 6 scores for an End.';
-        END IF;
     END IF;
 
     INSERT INTO Scores (
@@ -271,12 +259,12 @@ BEGIN
         range_instance_ID, end_ID, score_value, is_competition
     )
     VALUES 
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score1, is_competition),
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score2, is_competition),
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score3, is_competition),
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score4, is_competition),
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score5, is_competition),
-        (archer_id, archer_division_id, competition_id, range_instance_id, end_id, score6, is_competition);
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score1, is_competition),
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score2, is_competition),
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score3, is_competition),
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score4, is_competition),
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score5, is_competition),
+        (archer_id, archer_devision_id, competition_id, range_instance_id, end_id, score6, is_competition);
 
     UPDATE Ends
     SET end_total_score = (
@@ -292,10 +280,13 @@ END //
 DELIMITER ;
 
 
--- -------------------------------------------------------------------
--- PROCEDURE: Advance into a new range in a round:
--- -------------------------------------------------------------------
+-- -- -------------------------------------------------------------------
+-- -- PROCEDURE: Advance into a new range in a round:
+-- -- -------------------------------------------------------------------
+
 DELIMITER //
+
+DROP PROCEDURE IF EXISTS advance_round_range //
 
 CREATE PROCEDURE advance_round_range (
     IN arg_round_definition_association_id INT,
@@ -308,35 +299,43 @@ BEGIN
   DECLARE ranges_completed_by_archer INT;
   DECLARE new_range_instance_id INT;
   DECLARE new_end_id INT;
+  DECLARE current_range_has_scores INT DEFAULT 0;
 
   START TRANSACTION;
 
-    -- Step 1: Get round_definition_ID
     SELECT round_definition_ID INTO round_def_id
     FROM RoundDefinitionAssociation
     WHERE round_definition_association_ID = arg_round_definition_association_id;
 
-    -- Step 2: Total number of ranges in this round
+    -- Total number of ranges in this round
     SELECT COUNT(*) INTO total_ranges
     FROM RoundDefinitionAssociation
     WHERE round_definition_ID = round_def_id;
 
-    -- Step 3: Count distinct range_instance_IDs this archer has scores for in this round & competition
-    SELECT COUNT(DISTINCT s.range_instance_ID) INTO ranges_completed_by_archer
+    -- Count how many different round_definition_association_IDs this archer has scores for
+    SELECT COUNT(DISTINCT ri.round_definition_association_ID) INTO ranges_completed_by_archer
+    FROM Scores s
+    INNER JOIN RangeInstance ri ON s.range_instance_ID = ri.range_instance_ID
+    INNER JOIN RoundDefinitionAssociation rda ON ri.round_definition_association_ID = rda.round_definition_association_ID
+    WHERE s.archer_ID = arg_archer_id
+      AND s.competition_ID = arg_competition_id
+      AND rda.round_definition_ID = round_def_id;
+
+    -- Check if this specific range already has scores for this archer/competition
+    SELECT COUNT(*) INTO current_range_has_scores
     FROM Scores s
     INNER JOIN RangeInstance ri ON s.range_instance_ID = ri.range_instance_ID
     WHERE s.archer_ID = arg_archer_id
       AND s.competition_ID = arg_competition_id
-      AND ri.round_definition_association_ID IN (
-          SELECT round_definition_association_ID
-          FROM RoundDefinitionAssociation
-          WHERE round_definition_ID = round_def_id
-      );
+      AND ri.round_definition_association_ID = arg_round_definition_association_id;
 
-    -- Step 4: Check if the archer has completed all allowed ranges
+    -- Check if we can advance
     IF ranges_completed_by_archer >= total_ranges THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'You have reached the end of the round.';
+    ELSEIF current_range_has_scores > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'This range already has scores for this archer in this competition.';
     ELSE
         -- Create new RangeInstance
         INSERT INTO RangeInstance (round_definition_association_ID)
@@ -346,6 +345,8 @@ BEGIN
         -- Attach a fresh End to this new range
         INSERT INTO Ends (range_instance_ID, end_total_score)
         VALUES (new_range_instance_id, 0);
+        SET new_end_id = LAST_INSERT_ID();
+        
     END IF;
 
   COMMIT;
